@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 var (
@@ -26,7 +27,7 @@ func init() {
 	netClient = &http.Client{
 		Transport: transport,
 	}
-	go SignalHandler(make(chan os.Signal, 1))
+	go SignalHandler()
 }
 
 func main() {
@@ -51,21 +52,25 @@ func main() {
 
 }
 
-func SignalHandler(c chan os.Signal) {
-	signal.Notify(c, os.Interrupt)
-	for s := <-c; ; s = <-c {
-		switch s {
-		case os.Interrupt:
-			fmt.Println("^C received")
-			fmt.Println("<----------- ----------- ----------- ----------->")
-			fmt.Println("<----------- ----------- ----------- ----------->")
-			graphMap.CreatePath("https://youtube.com/jsfunc", "https://youtube.com/YouTubeRedOriginals")
-			os.Exit(0)
-		case os.Kill:
-			fmt.Println("SIGKILL received")
-			os.Exit(1)
-		}
-	}
+func SignalHandler() {
+	gracefulShutdown := make(chan os.Signal, 1)
+	signal.Notify(gracefulShutdown, syscall.SIGINT, syscall.SIGTERM)
+	<-gracefulShutdown
+	fmt.Println("shutting down gracefully")
+
+	//for s := <-c; ; s = <-c {
+	//	switch s {
+	//	case os.Interrupt:
+	//		fmt.Println("^C received")
+	//		fmt.Println("<----------- ----------- ----------- ----------->")
+	//		fmt.Println("<----------- ----------- ----------- ----------->")
+	//		graphMap.CreatePath("https://youtube.com/jsfunc", "https://youtube.com/YouTubeRedOriginals")
+	//		os.Exit(0)
+	//	case os.Kill:
+	//		fmt.Println("SIGKILL received")
+	//		os.Exit(1)
+	//	}
+	//}
 }
 
 func crawlLink(baseHref string) {
