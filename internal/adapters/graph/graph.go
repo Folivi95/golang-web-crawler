@@ -5,8 +5,6 @@ import (
 	"strings"
 )
 
-
-
 type Vertex struct {
 	value string
 	edge  *Vertex
@@ -48,15 +46,6 @@ func (g *Graph) AddEdge(vertex, node string) bool {
 
 	g.Adjacency[vertex] = append(g.Adjacency[vertex], node)
 	return true
-}
-
-func contains(edges []string, node string) bool {
-	set := make(map[string]struct{}, len(edges))
-	for _, n := range edges {
-		set[n] = struct{}{}
-	}
-	_, ok := set[node]
-	return ok
 }
 
 func (g *Graph) Print() {
@@ -102,4 +91,13 @@ func (g *Graph) createVisited() map[string]bool {
 		visited[key] = false
 	}
 	return visited
+}
+
+func contains(edges []string, node string) bool {
+	set := make(map[string]struct{}, len(edges))
+	for _, n := range edges {
+		set[n] = struct{}{}
+	}
+	_, ok := set[node]
+	return ok
 }
