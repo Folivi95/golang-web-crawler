@@ -1,10 +1,5 @@
 package graph
 
-type Vertex struct {
-	value string
-	edge  *Vertex
-}
-
 type Graph struct {
 	Adjacency map[string][]string
 }
@@ -17,7 +12,6 @@ func NewGraph() *Graph {
 
 func (g *Graph) AddVertex(vertex string) bool {
 	if _, ok := g.Adjacency[vertex]; ok {
-		// fmt.Printf("vertex %s already exists! \n", vertex)
 		return false
 	}
 	g.Adjacency[vertex] = []string{}

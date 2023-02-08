@@ -19,7 +19,7 @@ type App struct {
 	HttpConfig *tls.Config
 	Transport  *http.Transport
 	HttpClient *http.Client
-	GraphMap   *graph.Graph
+	GraphMap   ports.GraphStructure
 	HasCrawled map[string]bool
 	Crawler    ports.Crawl
 	UrlQueue   chan string
