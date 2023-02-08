@@ -10,13 +10,13 @@ import (
 )
 
 type Crawler struct {
-	GraphMap   graph.Graph
+	GraphMap   *graph.Graph
 	HttpClient *http.Client
 	HasCrawled map[string]bool
 	UrlQueue   chan string
 }
 
-func NewCrawler(graphMap graph.Graph,
+func NewCrawler(graphMap *graph.Graph,
 	httpClient *http.Client,
 	hasCrawled map[string]bool,
 	urlQueue chan string) *Crawler {
@@ -29,6 +29,17 @@ func NewCrawler(graphMap graph.Graph,
 	}
 }
 
+func (c *Crawler) ProcessBaseUrl(ctx context.Context, baseHref string) {
+	go func() {
+		select {
+		case <-ctx.Done():
+			close(c.UrlQueue)
+		default:
+			c.UrlQueue <- baseHref
+		}
+	}()
+}
+
 func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 	addVertexStatus := c.GraphMap.AddVertex(baseHref)
 	fmt.Println("addVertexStatus: ", addVertexStatus)
@@ -37,10 +48,16 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 
 	fmt.Println("Crawling... ", baseHref)
 
-	resp, err := c.HttpClient.Get(baseHref)
+	req, err := http.NewRequestWithContext(ctx, "GET", "", nil)
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	resp, err := c.HttpClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	defer resp.Body.Close()
 
 	links, err := extract_links.All(resp.Body)
@@ -54,8 +71,7 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 		}
 		fixedUrl := toFixedUrl(l.Href, baseHref)
 		if baseHref != fixedUrl {
-			addEdgeStatus := c.GraphMap.AddEdge(baseHref, fixedUrl)
-			fmt.Println("addEdgeStatus: ", addEdgeStatus)
+			c.GraphMap.AddEdge(baseHref, fixedUrl)
 		}
 
 		go func(url string) {
