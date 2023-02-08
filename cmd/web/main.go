@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"golang-web-crawler/internal/adapters/logger/zap_logger"
 	"os"
 )
 
@@ -10,19 +9,17 @@ func main() {
 	ctx, done := listenForCancellationAndAddToContext()
 	defer done()
 
-	logger, err := zap_logger.NewLogger()
-
 	args := os.Args[1:]
 
+	app, err := newApp()
+	app.Logger.LogError("Failed to create new application", err)
+
 	if len(args) == 0 {
-		logger.LogError("URL is missing, e.g. webscrapper http://js.org/", nil)
+		app.Logger.LogError("URL is missing, e.g. webscrapper http://js.org/", nil)
 		os.Exit(1)
 	}
 
 	baseUrl := args[0]
-
-	app, err := newApp()
-	logger.LogError("Failed to create new application", err)
 
 	// pass base url to crawler to begin processing of base url
 	app.Crawler.ProcessBaseUrl(ctx, baseUrl)
@@ -38,8 +35,8 @@ func main() {
 		}
 	}
 
-	logger.LogInfo("===========================================================")
-	logger.LogInfo(fmt.Sprintf("Done crawling host: %s\n", baseUrl))
+	app.Logger.LogInfo("===========================================================")
+	app.Logger.LogInfo(fmt.Sprintf("Done crawling host: %s\n", baseUrl))
 }
 
 //func SignalHandler() {

@@ -22,10 +22,6 @@ func (l *Logger) LogError(msg string, err error) {
 	l.LoggingService.Error(msg, zap.Error(err))
 }
 
-func (l *Logger) Log(msg string) {
-	l.Log(msg)
-}
-
 func (l *Logger) LogInfo(msg string) {
 	l.LoggingService.Info(msg)
 }

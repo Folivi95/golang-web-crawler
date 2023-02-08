@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"golang-web-crawler/internal/adapters/crawler"
 	"golang-web-crawler/internal/adapters/graph"
+	"golang-web-crawler/internal/adapters/logger/zap_logger"
 	"golang-web-crawler/internal/application/ports"
 	"net/http"
 )
@@ -18,6 +19,7 @@ type App struct {
 	HasCrawled map[string]bool
 	Crawler    ports.Crawl
 	UrlQueue   chan string
+	Logger     ports.Logger
 }
 
 func newApp() (*App, error) {
@@ -34,8 +36,13 @@ func newApp() (*App, error) {
 
 	urlQueue := make(chan string, URLQueueChannelCapacity)
 
+	logger, err := zap_logger.NewLogger()
+	if err != nil {
+		logger.LogError("Error setting up logger", err)
+	}
+
 	// set up a new crawler
-	crawlingService := crawler.NewCrawler(graphMap, httpClient, hasCrawled, urlQueue)
+	crawlingService := crawler.NewCrawler(graphMap, httpClient, hasCrawled, urlQueue, logger)
 
 	return &App{
 		HttpConfig: httpConfig,
@@ -45,5 +52,6 @@ func newApp() (*App, error) {
 		HasCrawled: hasCrawled,
 		UrlQueue:   urlQueue,
 		Crawler:    crawlingService,
+		Logger:     logger,
 	}, nil
 }

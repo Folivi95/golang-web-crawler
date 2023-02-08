@@ -16,12 +16,14 @@ type Crawler struct {
 	HasCrawled    map[string]bool
 	UrlQueue      chan string
 	LinkExtractor ports.LinksExtractor
+	Logger        ports.Logger
 }
 
 func NewCrawler(graphMap *graph.Graph,
 	httpClient *http.Client,
 	hasCrawled map[string]bool,
-	urlQueue chan string) *Crawler {
+	urlQueue chan string,
+	logger ports.Logger) *Crawler {
 
 	linkExtractor := extract_links.ExtractLinks{}
 
@@ -31,6 +33,7 @@ func NewCrawler(graphMap *graph.Graph,
 		HasCrawled:    hasCrawled,
 		UrlQueue:      urlQueue,
 		LinkExtractor: linkExtractor,
+		Logger:        logger,
 	}
 }
 
@@ -47,27 +50,26 @@ func (c *Crawler) ProcessBaseUrl(ctx context.Context, baseHref string) {
 
 func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 	c.GraphMap.AddVertex(baseHref)
-	// fmt.Println("addVertexStatus: ", addVertexStatus)
 
 	c.HasCrawled[baseHref] = true
 
-	fmt.Println("Crawling... ", baseHref)
+	c.Logger.LogInfo(fmt.Sprintf("Crawling... %s", baseHref))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseHref, nil)
 	if err != nil {
-		fmt.Println(err)
+		c.Logger.LogError("Failed to create http request with context", err)
 	}
 
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		c.Logger.LogError(fmt.Sprintf("Failed to make GET request to %s", baseHref), err)
 	}
 
 	defer resp.Body.Close()
 
 	links, err := c.LinkExtractor.All(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		c.Logger.LogError("Failed to extract links", err)
 	}
 
 	for _, l := range links {

@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 const ExitCodeInterrupt = 2
@@ -13,6 +14,9 @@ func listenForCancellationAndAddToContext() (ctx context.Context, done func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	signalChan := make(chan os.Signal, 1)
+
+	gracefulShutdown := make(chan os.Signal, 1)
+	signal.Notify(gracefulShutdown, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
 	done = func() {
 		signal.Stop(signalChan)
@@ -24,6 +28,8 @@ func listenForCancellationAndAddToContext() (ctx context.Context, done func()) {
 		case <-signalChan: // first signal, cancel context
 			fmt.Println("called signalChan")
 			cancel()
+		case <-gracefulShutdown:
+			fmt.Println("called gracefulShutdown")
 		case <-ctx.Done():
 			fmt.Println("called ctx.Done()")
 		}
