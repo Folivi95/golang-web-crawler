@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestToFixedUrl(t *testing.T) {
-	fixedUrl := toFixedUrl("/aboutus.html", "http://ajinkya.com/")
+	fixedUrl := toFixedUrl("http://ajinkya.com/aboutus.html", "http://ajinkya.com/")
 	if fixedUrl != "http://ajinkya.com/aboutus.html" {
 		t.Error("toFixedUrl did not get expected href")
 	}

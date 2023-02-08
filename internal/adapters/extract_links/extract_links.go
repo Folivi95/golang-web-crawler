@@ -1,6 +1,7 @@
 package extract_links
 
 import (
+	"golang-web-crawler/internal/application/models"
 	"golang.org/x/net/html"
 	"io"
 	"strconv"
@@ -8,16 +9,15 @@ import (
 )
 
 // Link object for parsing an anchor link
-type Link struct {
-	Href string
-	Text string
+
+type ExtractLinks struct {
 }
 
 // All takes a reader object (like the one returned from http.Get())
 // It returns a slice of Links representing the Href & Text attributes from
 // anchor links found in the provided html.
 // It does not close the reader passed to it.
-func All(htmlBody io.Reader) ([]Link, error) {
+func (e ExtractLinks) All(htmlBody io.Reader) ([]models.Link, error) {
 	document, err := html.Parse(htmlBody)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func All(htmlBody io.Reader) ([]Link, error) {
 
 	nodes := buildNodes(document)
 
-	var links []Link
+	var links []models.Link
 	for _, n := range nodes {
 		links = append(links, buildLink(n))
 	}
@@ -35,10 +35,10 @@ func All(htmlBody io.Reader) ([]Link, error) {
 }
 
 // removeDuplicateLinks removed repeated href Links
-func removeDuplicateLinks(links []Link) []Link {
+func removeDuplicateLinks(links []models.Link) []models.Link {
 	var (
 		check      = make(map[string]int)
-		cleanLinks []Link
+		cleanLinks []models.Link
 	)
 	for _, n := range links {
 		if val := check[n.Href]; val == 0 {
@@ -61,7 +61,7 @@ func buildNodes(n *html.Node) []*html.Node {
 	return ret
 }
 
-func buildLink(n *html.Node) (link Link) {
+func buildLink(n *html.Node) (link models.Link) {
 	for _, attr := range n.Attr {
 		if attr.Key == "href" {
 			link.Href = removeTrailingSlash(trimHash(attr.Val))

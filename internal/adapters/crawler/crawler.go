@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"golang-web-crawler/internal/adapters/extract_links"
 	"golang-web-crawler/internal/adapters/graph"
+	"golang-web-crawler/internal/application/ports"
 	"net/http"
 	"net/url"
 )
 
 type Crawler struct {
-	GraphMap   *graph.Graph
-	HttpClient *http.Client
-	HasCrawled map[string]bool
-	UrlQueue   chan string
+	GraphMap      *graph.Graph
+	HttpClient    *http.Client
+	HasCrawled    map[string]bool
+	UrlQueue      chan string
+	LinkExtractor ports.LinksExtractor
 }
 
 func NewCrawler(graphMap *graph.Graph,
@@ -21,11 +23,14 @@ func NewCrawler(graphMap *graph.Graph,
 	hasCrawled map[string]bool,
 	urlQueue chan string) *Crawler {
 
+	linkExtractor := extract_links.ExtractLinks{}
+
 	return &Crawler{
-		GraphMap:   graphMap,
-		HttpClient: httpClient,
-		HasCrawled: hasCrawled,
-		UrlQueue:   urlQueue,
+		GraphMap:      graphMap,
+		HttpClient:    httpClient,
+		HasCrawled:    hasCrawled,
+		UrlQueue:      urlQueue,
+		LinkExtractor: linkExtractor,
 	}
 }
 
@@ -60,7 +65,7 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 
 	defer resp.Body.Close()
 
-	links, err := extract_links.All(resp.Body)
+	links, err := c.LinkExtractor.All(resp.Body)
 	if err != nil {
 		fmt.Println(err)
 	}
