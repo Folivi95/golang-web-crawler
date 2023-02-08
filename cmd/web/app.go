@@ -10,11 +10,6 @@ import (
 
 const URLQueueChannelCapacity = 10
 
-var (
-	urlQueue   = make(chan string, URLQueueChannelCapacity)
-	hasCrawled = make(map[string]bool)
-)
-
 type App struct {
 	HttpConfig *tls.Config
 	Transport  *http.Transport
@@ -35,9 +30,9 @@ func newApp() (*App, error) {
 	}
 	graphMap := graph.NewGraph()
 
-	hasCrawled = make(map[string]bool)
+	hasCrawled := make(map[string]bool)
 
-	urlQueue = make(chan string, URLQueueChannelCapacity)
+	urlQueue := make(chan string, URLQueueChannelCapacity)
 
 	// set up a new crawler
 	crawlingService := crawler.NewCrawler(graphMap, httpClient, hasCrawled, urlQueue)
