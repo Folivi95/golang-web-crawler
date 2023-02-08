@@ -46,14 +46,14 @@ func (c *Crawler) ProcessBaseUrl(ctx context.Context, baseHref string) {
 }
 
 func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
-	addVertexStatus := c.GraphMap.AddVertex(baseHref)
-	fmt.Println("addVertexStatus: ", addVertexStatus)
+	c.GraphMap.AddVertex(baseHref)
+	// fmt.Println("addVertexStatus: ", addVertexStatus)
 
 	c.HasCrawled[baseHref] = true
 
 	fmt.Println("Crawling... ", baseHref)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", "", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseHref, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
