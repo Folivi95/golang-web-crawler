@@ -1,18 +1,25 @@
 package main
 
-import "os"
+import (
+	"github.com/joho/godotenv"
+	"log"
+	"os"
+)
 
 type AppConfig struct {
-	LogLevel string
-	BaseUrl  string
+	BaseUrl string
 }
 
 func loadAppConfig() (AppConfig, error) {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// set base URL
 	baseUrl := os.Getenv("BASE_URL")
-	logLevel := os.Getenv("LOG_LEVEL")
 
 	return AppConfig{
-		LogLevel: logLevel,
-		BaseUrl:  baseUrl,
+		BaseUrl: baseUrl,
 	}, nil
 }
