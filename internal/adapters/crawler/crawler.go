@@ -13,29 +13,32 @@ import (
 )
 
 type Crawler struct {
-	GraphMap      *graph.Graph
-	HttpClient    *http.Client
-	HasCrawled    map[string]bool
-	UrlQueue      chan string
-	LinkExtractor ports.LinksExtractor
-	Logger        *zap.Logger
+	GraphMap           *graph.Graph
+	HttpClient         *http.Client
+	HasCrawled         map[string]bool
+	UrlQueue           chan string
+	LinkExtractor      ports.LinksExtractor
+	CrawlExternalLinks bool
+	Logger             *zap.Logger
 }
 
 func NewCrawler(graphMap *graph.Graph,
 	httpClient *http.Client,
 	hasCrawled map[string]bool,
 	urlQueue chan string,
+	crawlExternalLinks bool,
 	logger *zap.Logger) *Crawler {
 
 	linkExtractor := extract_links.ExtractLinks{}
 
 	return &Crawler{
-		GraphMap:      graphMap,
-		HttpClient:    httpClient,
-		HasCrawled:    hasCrawled,
-		UrlQueue:      urlQueue,
-		LinkExtractor: linkExtractor,
-		Logger:        logger,
+		GraphMap:           graphMap,
+		HttpClient:         httpClient,
+		HasCrawled:         hasCrawled,
+		UrlQueue:           urlQueue,
+		LinkExtractor:      linkExtractor,
+		CrawlExternalLinks: crawlExternalLinks,
+		Logger:             logger,
 	}
 }
 
@@ -67,6 +70,7 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 		c.Logger.Error(fmt.Sprintf("Failed to make GET request to %s", baseHref), zap.Error(err))
 	}
 
+	// close response body reader
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -83,7 +87,7 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 		if l.Href == "" {
 			continue
 		}
-		fixedUrl := toFixedUrl(l.Href, baseHref)
+		fixedUrl := c.toFixedUrl(l.Href, baseHref)
 		if baseHref != fixedUrl {
 			_ = c.GraphMap.AddEdge(baseHref, fixedUrl)
 		}
@@ -94,18 +98,23 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 	}
 }
 
-func toFixedUrl(href, base string) string {
+func (c *Crawler) toFixedUrl(href, base string) string {
+	// parse href URL
 	uri, err := url.Parse(href)
 
+	// check if href URL is an email address or phone number
 	if err != nil || uri.Scheme == "mailto" || uri.Scheme == "tel" {
 		return base
 	}
+
+	// parse baseUrl
 	baseUrl, err := url.Parse(base)
 	if err != nil {
 		return ""
 	}
 
-	if uri.Host != baseUrl.Host {
+	// check if crawler should crawl external links
+	if !c.CrawlExternalLinks && uri.Host != baseUrl.Host {
 		return base
 	}
 

@@ -33,7 +33,6 @@ func listenForCancellationAndAddToContext() (ctx context.Context, done func()) {
 			cancel()
 			os.Exit(ExitCodeInterrupt)
 		case <-ctx.Done():
-			fmt.Println("called ctx.Done()")
 		}
 
 		<-signalChan // second signal, hard exit

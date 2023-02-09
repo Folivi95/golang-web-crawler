@@ -12,9 +12,6 @@ import (
 const URLQueueChannelCapacity = 10
 
 type App struct {
-	HttpConfig *tls.Config
-	Transport  *http.Transport
-	HttpClient *http.Client
 	GraphMap   ports.GraphStructure
 	HasCrawled map[string]bool
 	Crawler    ports.Crawl
@@ -23,6 +20,7 @@ type App struct {
 }
 
 func newApp() (*App, error) {
+	// define http client
 	httpConfig := &tls.Config{InsecureSkipVerify: true}
 	transport := &http.Transport{
 		TLSClientConfig: httpConfig,
@@ -30,26 +28,32 @@ func newApp() (*App, error) {
 	httpClient := &http.Client{
 		Transport: transport,
 	}
+
+	// instantiate new graph
 	graphMap := graph.NewGraph()
 
+	// create map of crawled URLs
 	hasCrawled := make(map[string]bool)
 
+	// create URL queue
 	urlQueue := make(chan string, URLQueueChannelCapacity)
+
+	// set crawl external links
+	crawlExternalLinks := false
 
 	// add logger
 	logger, err := zap.NewDevelopment()
 	defer logger.Sync()
 	if err != nil {
 		logger.Error("Failed to create logger", zap.Error(err))
+		return nil, err
 	}
 
 	// set up a new crawler
-	crawlingService := crawler.NewCrawler(graphMap, httpClient, hasCrawled, urlQueue, logger)
+	crawlingService := crawler.NewCrawler(graphMap, httpClient, hasCrawled,
+		urlQueue, crawlExternalLinks, logger)
 
 	return &App{
-		HttpConfig: httpConfig,
-		Transport:  transport,
-		HttpClient: httpClient,
 		GraphMap:   graphMap,
 		HasCrawled: hasCrawled,
 		UrlQueue:   urlQueue,
