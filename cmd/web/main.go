@@ -24,6 +24,8 @@ func main() {
 	if appConfig.BaseUrl != "" {
 		// send base URL to channel
 		app.UrlQueue <- appConfig.BaseUrl
+	} else {
+		app.Logger.Fatal("Base URL value is not present in environment variable")
 	}
 
 	for href := range app.UrlQueue {
