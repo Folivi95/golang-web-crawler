@@ -37,51 +37,6 @@ func (g *Graph) AddEdge(vertex, node string) bool {
 	return true
 }
 
-//func (g *Graph) Print() {
-//	for i, val := range g.Adjacency {
-//		fmt.Printf("key: %s value %s \n \n", i, strings.Join(val, " -> "))
-//	}
-//}
-
-//func (g *Graph) CreatePath(firstNode, secondNode string) bool {
-//	visited := g.createVisited()
-//	var (
-//		path []string
-//		q    []string
-//	)
-//	q = append(q, firstNode)
-//	visited[firstNode] = true
-//
-//	for len(q) > 0 {
-//		var currentNode string
-//		currentNode, q = q[0], q[1:]
-//		path = append(path, currentNode)
-//		edges := g.Adjacency[currentNode]
-//		if contains(edges, secondNode) {
-//			path = append(path, secondNode)
-//			// fmt.Println(strings.Join(path, "->"))
-//			return true
-//		}
-//
-//		for _, node := range g.Adjacency[currentNode] {
-//			if !visited[node] {
-//				visited[node] = true
-//				q = append(q, node)
-//			}
-//		}
-//	}
-//	// fmt.Println("no link found")
-//	return false
-//}
-
-//func (g *Graph) createVisited() map[string]bool {
-//	visited := make(map[string]bool, len(g.Adjacency))
-//	for key := range g.Adjacency {
-//		visited[key] = false
-//	}
-//	return visited
-//}
-
 func contains(edges []string, node string) bool {
 	set := make(map[string]struct{}, len(edges))
 	for _, n := range edges {

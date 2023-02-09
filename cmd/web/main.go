@@ -15,7 +15,7 @@ func main() {
 	app.Logger.LogError("Failed to create new application", err)
 
 	if len(args) == 0 {
-		app.Logger.LogError("URL is missing, e.g. webscrapper http://js.org/", nil)
+		app.Logger.LogError("URL is missing, e.g. webscrapper https://js.org/", nil)
 		os.Exit(1)
 	}
 

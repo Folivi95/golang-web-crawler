@@ -6,6 +6,7 @@ import (
 	"golang-web-crawler/internal/adapters/extract_links"
 	"golang-web-crawler/internal/adapters/graph"
 	"golang-web-crawler/internal/application/ports"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -49,7 +50,7 @@ func (c *Crawler) ProcessBaseUrl(ctx context.Context, baseHref string) {
 }
 
 func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
-	c.GraphMap.AddVertex(baseHref)
+	_ = c.GraphMap.AddVertex(baseHref)
 
 	c.HasCrawled[baseHref] = true
 
@@ -65,7 +66,12 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 		c.Logger.LogError(fmt.Sprintf("Failed to make GET request to %s", baseHref), err)
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			c.Logger.LogError("Error closing http response body", err)
+		}
+	}(resp.Body)
 
 	links, err := c.LinkExtractor.All(resp.Body)
 	if err != nil {
@@ -78,7 +84,7 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 		}
 		fixedUrl := toFixedUrl(l.Href, baseHref)
 		if baseHref != fixedUrl {
-			c.GraphMap.AddEdge(baseHref, fixedUrl)
+			_ = c.GraphMap.AddEdge(baseHref, fixedUrl)
 		}
 
 		go func(url string) {
