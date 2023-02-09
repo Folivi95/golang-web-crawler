@@ -5,6 +5,7 @@ import (
 )
 
 func main() {
+	// handle shutdown gracefully
 	ctx, done := listenForCancellationAndAddToContext()
 	defer done()
 
@@ -28,6 +29,7 @@ func main() {
 		app.Logger.Fatal("Base URL value is not present in environment variable")
 	}
 
+	// range over channel and crawl URLs
 	for href := range app.UrlQueue {
 		if !app.HasCrawled[href] {
 			app.Crawler.CrawlLink(ctx, href)

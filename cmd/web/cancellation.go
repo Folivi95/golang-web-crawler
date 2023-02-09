@@ -10,6 +10,7 @@ import (
 
 const ExitCodeInterrupt = 2
 
+// listenForCancellationAndAddToContext listens for cancellation request and releases resources
 func listenForCancellationAndAddToContext() (ctx context.Context, done func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -30,7 +31,7 @@ func listenForCancellationAndAddToContext() (ctx context.Context, done func()) {
 			cancel()
 		case <-gracefulShutdown:
 			fmt.Println("\nCancelling contexts...... Shutting down application gracefully")
-			cancel()
+			cancel() // releases resources associated with context
 			os.Exit(ExitCodeInterrupt)
 		case <-ctx.Done():
 		}

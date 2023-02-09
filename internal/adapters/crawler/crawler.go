@@ -23,6 +23,7 @@ type Crawler struct {
 	Logger        *zap.Logger
 }
 
+// NewCrawler creates a new web crawler
 func NewCrawler(graphMap *graph.Graph,
 	httpClient *http.Client,
 	hasCrawled map[string]bool,
@@ -46,18 +47,23 @@ func NewCrawler(graphMap *graph.Graph,
 	}
 }
 
+// CrawlLink crawles URL passed as an argument
 func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
+	// add baseHref to graph vertex
 	_ = c.GraphMap.AddVertex(baseHref)
 
+	// mark baseHref as crawled
 	c.HasCrawled[baseHref] = true
 
 	c.Logger.Info(fmt.Sprintf("Crawling... %s", baseHref))
 
+	// create http request with context
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseHref, nil)
 	if err != nil {
 		c.Logger.Error("Failed to create http request with context", zap.Error(err))
 	}
 
+	// make http request
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		c.Logger.Error(fmt.Sprintf("Failed to make GET request to %s", baseHref), zap.Error(err))
@@ -71,11 +77,13 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 		}
 	}(resp.Body)
 
+	// extract all links from response body
 	links, err := c.LinkExtractor.All(resp.Body)
 	if err != nil {
 		c.Logger.Error("Failed to extract links", zap.Error(err))
 	}
 
+	// range over links and add nodes to graph edge
 	for _, l := range links {
 		if l.Href == "" {
 			continue

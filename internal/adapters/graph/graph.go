@@ -4,12 +4,14 @@ type Graph struct {
 	Adjacency map[string][]string
 }
 
+// NewGraph creates new graph data structure
 func NewGraph() *Graph {
 	return &Graph{
 		Adjacency: make(map[string][]string),
 	}
 }
 
+// AddVertex add vertex to the graph
 func (g *Graph) AddVertex(vertex string) bool {
 	if _, ok := g.Adjacency[vertex]; ok {
 		return false
@@ -18,18 +20,18 @@ func (g *Graph) AddVertex(vertex string) bool {
 	return true
 }
 
+// AddEdge adds node to an existing vertex
+// or creates a vertex using the node if vertex exists
+// but node does not exist in graph
 func (g *Graph) AddEdge(vertex, node string) bool {
 	if _, ok := g.Adjacency[vertex]; !ok {
-		// fmt.Printf("vertex %s does not exists! \n", vertex)
 		return false
 	}
 	if ok := contains(g.Adjacency[vertex], node); ok {
-		// fmt.Printf("node %s already exists! \n", node)
 		return false
 	}
 
 	if _, ok := g.Adjacency[node]; !ok {
-		// fmt.Printf("Node %s not found in Adjacency, creating new vertex\n", node)
 		g.AddVertex(node)
 	}
 
