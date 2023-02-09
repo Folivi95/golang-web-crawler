@@ -3,6 +3,7 @@ package crawler
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"golang-web-crawler/internal/adapters/extract_links"
 	"golang-web-crawler/internal/adapters/graph"
 	"golang-web-crawler/internal/application/ports"
@@ -17,14 +18,14 @@ type Crawler struct {
 	HasCrawled    map[string]bool
 	UrlQueue      chan string
 	LinkExtractor ports.LinksExtractor
-	Logger        ports.Logger
+	Logger        *zap.Logger
 }
 
 func NewCrawler(graphMap *graph.Graph,
 	httpClient *http.Client,
 	hasCrawled map[string]bool,
 	urlQueue chan string,
-	logger ports.Logger) *Crawler {
+	logger *zap.Logger) *Crawler {
 
 	linkExtractor := extract_links.ExtractLinks{}
 
@@ -54,28 +55,28 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 
 	c.HasCrawled[baseHref] = true
 
-	c.Logger.LogInfo(fmt.Sprintf("Crawling... %s", baseHref))
+	c.Logger.Info(fmt.Sprintf("Crawling... %s", baseHref))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseHref, nil)
 	if err != nil {
-		c.Logger.LogError("Failed to create http request with context", err)
+		c.Logger.Error("Failed to create http request with context", zap.Error(err))
 	}
 
 	resp, err := c.HttpClient.Do(req)
 	if err != nil {
-		c.Logger.LogError(fmt.Sprintf("Failed to make GET request to %s", baseHref), err)
+		c.Logger.Error(fmt.Sprintf("Failed to make GET request to %s", baseHref), zap.Error(err))
 	}
 
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			c.Logger.LogError("Error closing http response body", err)
+			c.Logger.Error("Error closing http response body", zap.Error(err))
 		}
 	}(resp.Body)
 
 	links, err := c.LinkExtractor.All(resp.Body)
 	if err != nil {
-		c.Logger.LogError("Failed to extract links", err)
+		c.Logger.Error("Failed to extract links", zap.Error(err))
 	}
 
 	for _, l := range links {

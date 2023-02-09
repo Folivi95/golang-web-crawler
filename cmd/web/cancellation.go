@@ -29,7 +29,9 @@ func listenForCancellationAndAddToContext() (ctx context.Context, done func()) {
 			fmt.Println("called signalChan")
 			cancel()
 		case <-gracefulShutdown:
-			fmt.Println("called gracefulShutdown")
+			fmt.Println("\nCancelling contexts...... Shutting down application gracefully")
+			cancel()
+			os.Exit(ExitCodeInterrupt)
 		case <-ctx.Done():
 			fmt.Println("called ctx.Done()")
 		}

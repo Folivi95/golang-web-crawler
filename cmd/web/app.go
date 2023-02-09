@@ -2,9 +2,9 @@ package main
 
 import (
 	"crypto/tls"
+	"go.uber.org/zap"
 	"golang-web-crawler/internal/adapters/crawler"
 	"golang-web-crawler/internal/adapters/graph"
-	"golang-web-crawler/internal/adapters/logger/zap_logger"
 	"golang-web-crawler/internal/application/ports"
 	"net/http"
 )
@@ -19,7 +19,7 @@ type App struct {
 	HasCrawled map[string]bool
 	Crawler    ports.Crawl
 	UrlQueue   chan string
-	Logger     ports.Logger
+	Logger     *zap.Logger
 }
 
 func newApp() (*App, error) {
@@ -36,9 +36,11 @@ func newApp() (*App, error) {
 
 	urlQueue := make(chan string, URLQueueChannelCapacity)
 
-	logger, err := zap_logger.NewLogger()
+	// add logger
+	logger, err := zap.NewDevelopment()
+	defer logger.Sync()
 	if err != nil {
-		logger.LogError("Error setting up logger", err)
+		logger.Error("Failed to create logger", zap.Error(err))
 	}
 
 	// set up a new crawler
