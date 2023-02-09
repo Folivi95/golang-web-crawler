@@ -30,7 +30,10 @@ func NewCrawler(graphMap *graph.Graph,
 	crawlExternalLinks bool,
 	logger *zap.Logger) *Crawler {
 
+	// create link extractor
 	linkExtractor := extract_links.ExtractLinks{}
+
+	// set crawler to follow external links
 	CrawlExternalLinks = crawlExternalLinks
 
 	return &Crawler{
@@ -41,17 +44,6 @@ func NewCrawler(graphMap *graph.Graph,
 		LinkExtractor: linkExtractor,
 		Logger:        logger,
 	}
-}
-
-func (c *Crawler) ProcessBaseUrl(ctx context.Context, baseHref string) {
-	go func() {
-		select {
-		case <-ctx.Done():
-			close(c.UrlQueue)
-		default:
-			c.UrlQueue <- baseHref
-		}
-	}()
 }
 
 func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
