@@ -12,14 +12,15 @@ import (
 	"net/url"
 )
 
+var CrawlExternalLinks = false
+
 type Crawler struct {
-	GraphMap           *graph.Graph
-	HttpClient         *http.Client
-	HasCrawled         map[string]bool
-	UrlQueue           chan string
-	LinkExtractor      ports.LinksExtractor
-	CrawlExternalLinks bool
-	Logger             *zap.Logger
+	GraphMap      *graph.Graph
+	HttpClient    *http.Client
+	HasCrawled    map[string]bool
+	UrlQueue      chan string
+	LinkExtractor ports.LinksExtractor
+	Logger        *zap.Logger
 }
 
 func NewCrawler(graphMap *graph.Graph,
@@ -30,15 +31,15 @@ func NewCrawler(graphMap *graph.Graph,
 	logger *zap.Logger) *Crawler {
 
 	linkExtractor := extract_links.ExtractLinks{}
+	CrawlExternalLinks = crawlExternalLinks
 
 	return &Crawler{
-		GraphMap:           graphMap,
-		HttpClient:         httpClient,
-		HasCrawled:         hasCrawled,
-		UrlQueue:           urlQueue,
-		LinkExtractor:      linkExtractor,
-		CrawlExternalLinks: crawlExternalLinks,
-		Logger:             logger,
+		GraphMap:      graphMap,
+		HttpClient:    httpClient,
+		HasCrawled:    hasCrawled,
+		UrlQueue:      urlQueue,
+		LinkExtractor: linkExtractor,
+		Logger:        logger,
 	}
 }
 
@@ -87,7 +88,7 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 		if l.Href == "" {
 			continue
 		}
-		fixedUrl := c.toFixedUrl(l.Href, baseHref)
+		fixedUrl := toFixedUrl(l.Href, baseHref)
 		if baseHref != fixedUrl {
 			_ = c.GraphMap.AddEdge(baseHref, fixedUrl)
 		}
@@ -98,7 +99,7 @@ func (c *Crawler) CrawlLink(ctx context.Context, baseHref string) {
 	}
 }
 
-func (c *Crawler) toFixedUrl(href, base string) string {
+func toFixedUrl(href, base string) string {
 	// parse href URL
 	uri, err := url.Parse(href)
 
@@ -114,7 +115,7 @@ func (c *Crawler) toFixedUrl(href, base string) string {
 	}
 
 	// check if crawler should crawl external links
-	if !c.CrawlExternalLinks && uri.Host != baseUrl.Host {
+	if !CrawlExternalLinks && uri.Host != baseUrl.Host {
 		return base
 	}
 
