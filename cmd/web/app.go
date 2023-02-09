@@ -9,7 +9,10 @@ import (
 	"net/http"
 )
 
+// URLQueueChannelCapacity sets channel capacity
 const URLQueueChannelCapacity = 10
+
+var CrawlExternalLinks bool
 
 type App struct {
 	GraphMap   ports.GraphStructure
@@ -19,6 +22,7 @@ type App struct {
 	Logger     *zap.Logger
 }
 
+// newApp creates or instantiates new application
 func newApp() (*App, error) {
 	// define http client
 	httpConfig := &tls.Config{InsecureSkipVerify: true}
@@ -38,9 +42,6 @@ func newApp() (*App, error) {
 	// create URL queue
 	urlQueue := make(chan string, URLQueueChannelCapacity)
 
-	// set crawl external links
-	crawlExternalLinks := false
-
 	// add logger
 	logger, err := zap.NewDevelopment()
 	defer logger.Sync()
@@ -51,7 +52,7 @@ func newApp() (*App, error) {
 
 	// set up a new crawler
 	crawlingService := crawler.NewCrawler(graphMap, httpClient, hasCrawled,
-		urlQueue, crawlExternalLinks, logger)
+		urlQueue, CrawlExternalLinks, logger)
 
 	return &App{
 		GraphMap:   graphMap,

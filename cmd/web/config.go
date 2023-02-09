@@ -4,10 +4,12 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strconv"
 )
 
 type AppConfig struct {
-	BaseUrl string
+	BaseUrl            string
+	CrawlExternalLinks bool
 }
 
 func loadAppConfig() (AppConfig, error) {
@@ -18,6 +20,10 @@ func loadAppConfig() (AppConfig, error) {
 
 	// set base URL
 	baseUrl := os.Getenv("BASE_URL")
+
+	// set crawl external links value
+	crawlExternalLinks := os.Getenv("CRAWL_EXTERNAL_LINKS")
+	CrawlExternalLinks, _ = strconv.ParseBool(crawlExternalLinks)
 
 	return AppConfig{
 		BaseUrl: baseUrl,
